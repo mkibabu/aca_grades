@@ -7,8 +7,8 @@ import pandas
 
 import config
 
-
 FILES = []
+GRADES = {}
 logger = logging.getLogger("get_files")
 
 
@@ -32,7 +32,8 @@ def read_all_files():
     # work out very well here. Loop over the filenames instead.
     for file in FILES:
         with open(file, 'r') as grades:
-            logger.info("Processing data for class %s", file.name[:file.name.index(".csv")])
+            class_name = file.name[:file.name.index(".csv")]
+            logger.info("Processing data for class %s", class_name)
             try:
                 df = pandas.read_csv(
                     file,
@@ -41,7 +42,10 @@ def read_all_files():
                     header=0
                     )
                 excluded_students, mean_grade = calculate_average(df)
-                print(excluded_students, mean_grade)
+                this_class = {
+                    mean_grade: [class_name, len(df), len(df) - len(excluded_students), excluded_students]
+                }
+                GRADES.update(this_class)
             except Exception:
                 logger.exception("Error reading input file %s", file.name)
 
@@ -73,3 +77,4 @@ def calculate_average(df: pandas.DataFrame) -> (List[str], int):
 if __name__ == "__main__":
     populate_input_files_list()
     read_all_files()
+    print(GRADES)
