@@ -5,6 +5,7 @@ import pathlib
 import pandas
 
 import config
+from grade_calculator import calculate_average
 
 
 FILES = []
@@ -34,7 +35,7 @@ def read_all_files():
             logger.info("Processing data for class %s", file.name[:file.name.index(".csv")])
             try:
                 df = pandas.read_csv(file, index_col="Student Name", converters={"Grade": lambda g: int(float(g))})
-                print(df)
+                calculate_average(df)
             except Exception:
                 logger.exception("Error reading input file %s", file.name)
 
