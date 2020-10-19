@@ -1,11 +1,11 @@
 import logging
 import math
 import pathlib
+from typing import List
 
 import pandas
 
 import config
-from grade_calculator import calculate_average
 
 
 FILES = []
@@ -34,10 +34,40 @@ def read_all_files():
         with open(file, 'r') as grades:
             logger.info("Processing data for class %s", file.name[:file.name.index(".csv")])
             try:
-                df = pandas.read_csv(file, index_col="Student Name", converters={"Grade": lambda g: int(float(g))})
-                calculate_average(df)
+                df = pandas.read_csv(
+                    file,
+                    converters={"Grade": lambda g: int(float(g))},
+                    names=['student', 'grade'],
+                    header=0
+                    )
+                excluded_students, mean_grade = calculate_average(df)
+                print(excluded_students, mean_grade)
             except Exception:
                 logger.exception("Error reading input file %s", file.name)
+
+
+def calculate_average(df: pandas.DataFrame) -> (List[str], int):
+    """
+    Calculate the average grade from a dataframe of grades, excluding grades
+    less than 1.
+
+    params:
+    df (pandas.DataFrame): A dataframe of grades, with each row representing a
+        student name and grade.
+
+    returns:
+    List[str]: List of students excluded from the average grade calculation.
+    int: the average grade from this dataframe of grades.
+    """
+    # Get the list of students that we'll exclude
+    zero_grades = df[df['grade'] == 0]
+    excluded = zero_grades['student'].to_list()
+
+    # Calculate average grade using non-zero-grade students
+    non_zero_df = df[df['grade'] > 0]
+    avg_grade = round(non_zero_df['grade'].mean(), 2)
+
+    return excluded, avg_grade
 
 
 if __name__ == "__main__":
