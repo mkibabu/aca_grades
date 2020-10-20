@@ -1,0 +1,28 @@
+Congratulations, ClassC!
+You're the highest-performing class, with an average score of 80.1!
+
+Full summary of scores for all classes:
+
+Class: ClassC
+Mean score: 80.1
+Total # of students: 10
+Number of excluded students: 0
+Students with 0 grade:
+- 
+
+
+Class: ClassB
+Mean score: 79.7
+Total # of students: 10
+Number of excluded students: 2
+Students with 0 grade:
+- Hayden Boyle, Margarita Marks
+
+
+Class: ClassA
+Mean score: 79.4
+Total # of students: 10
+Number of excluded students: 1
+Students with 0 grade:
+- Edith Adkins
+

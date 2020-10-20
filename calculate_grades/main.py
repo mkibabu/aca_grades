@@ -1,7 +1,7 @@
 import logging
 import math
 import pathlib
-from typing import List
+from typing import Dict, List
 
 import pandas
 
@@ -12,7 +12,7 @@ GRADES = {}
 logger = logging.getLogger("get_files")
 
 
-def populate_input_files_list():
+def populate_input_files_list() -> None:
     """
     Populate the list of files to read from. This assumes that the files
     are in the directory defined by the INPUT_DIR config value.
@@ -27,8 +27,8 @@ def populate_input_files_list():
     logger.info("Found %s files in input location %s", len(FILES), input_dir.resolve())
 
 
-def read_all_files():
-    # Since we have to keep track of individual class values, fileinput doesn't
+def read_and_process_all_files() -> None:
+    # Since we have to keep track of individual class values, FileInput doesn't
     # work out very well here. Loop over the filenames instead.
     for file in FILES:
         with open(file, 'r') as grades:
@@ -41,7 +41,7 @@ def read_all_files():
                     names=['student', 'grade'],
                     header=0
                     )
-                excluded_students, mean_grade = calculate_average(df)
+                excluded_students, mean_grade = _calculate_average(df)
                 this_class = {
                     mean_grade: [class_name, len(df), len(df) - len(excluded_students), excluded_students]
                 }
@@ -50,7 +50,7 @@ def read_all_files():
                 logger.exception("Error reading input file %s", file.name)
 
 
-def calculate_average(df: pandas.DataFrame) -> (List[str], int):
+def _calculate_average(df: pandas.DataFrame) -> (List[str], int):
     """
     Calculate the average grade from a dataframe of grades, excluding grades
     less than 1.
@@ -69,12 +69,50 @@ def calculate_average(df: pandas.DataFrame) -> (List[str], int):
 
     # Calculate average grade using non-zero-grade students
     non_zero_df = df[df['grade'] > 0]
-    avg_grade = round(non_zero_df['grade'].mean(), 2)
+    avg_grade = round(non_zero_df['grade'].mean(), 1)
 
     return excluded, avg_grade
 
 
+def write_results_to_file() -> None:
+    """
+    Write the results of calculating the average to an output file.
+    The file name is determined by the config value OUTPUT_FILE.
+    """
+    sorted_grades = sorted([grade for grade in GRADES], reverse=True)
+    with open(config.OUTPUT_FILE, 'w') as outfile:
+        # Write the highest class average
+        highest_score = sorted_grades[0]
+        best_class_details = GRADES[highest_score]
+        outfile.write(
+            ("Congratulations, {0}!\n"
+            "You're the highest-performing class, "
+            "with an average score of {1}!\n\n").format(
+                best_class_details[0],
+                highest_score
+            )
+        )
+        outfile.write("Full summary of scores for all classes:\n")
+        for grade in sorted_grades:
+            class_details = GRADES[grade]
+            output_str = (
+                "\nClass: {0:<5}\n"
+                "Mean score: {1}\n"
+                "Total # of students: {2}\n"
+                "Number of excluded students: {3}\n"
+                "Students with 0 grade:\n"
+                "- {4}\n\n".format(
+                    class_details[0],
+                    grade,
+                    class_details[1],
+                    len(class_details[3]),
+                    ", ".join(name for name in class_details[3])
+                )
+            )
+            outfile.write(output_str)
+
+
 if __name__ == "__main__":
     populate_input_files_list()
-    read_all_files()
-    print(GRADES)
+    read_and_process_all_files()
+    write_results_to_file()

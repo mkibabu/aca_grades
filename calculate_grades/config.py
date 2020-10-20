@@ -24,7 +24,8 @@ log_conf = dict(
 
 dictConfig(log_conf)
 
-# location of input files. Defaults to top-level directory
+# location of input and output files. Defaults to top-level directory
 # named "input".
 INPUT_LOCATION = os.environ.get('INPUT_LOCATION', 'input')
 INPUT_DIR = pathlib.Path(__file__).parents[1].joinpath(INPUT_LOCATION)
+OUTPUT_FILE = pathlib.Path(__file__).parents[1].joinpath('output.txt')
