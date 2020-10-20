@@ -3,9 +3,9 @@ import math
 import pathlib
 from typing import Dict, List
 
+import config
 import pandas
 
-import config
 
 FILES = []
 GRADES = {}
@@ -31,19 +31,24 @@ def read_and_process_all_files() -> None:
     # Since we have to keep track of individual class values, FileInput doesn't
     # work out very well here. Loop over the filenames instead.
     for file in FILES:
-        with open(file, 'r') as grades:
-            class_name = file.name[:file.name.index(".csv")]
+        with open(file, "r") as grades:
+            class_name = file.name[: file.name.index(".csv")]
             logger.info("Processing data for class %s", class_name)
             try:
                 df = pandas.read_csv(
                     file,
                     converters={"Grade": lambda g: int(float(g))},
-                    names=['student', 'grade'],
-                    header=0
-                    )
+                    names=["student", "grade"],
+                    header=0,
+                )
                 excluded_students, mean_grade = _calculate_average(df)
                 this_class = {
-                    mean_grade: [class_name, len(df), len(df) - len(excluded_students), excluded_students]
+                    mean_grade: [
+                        class_name,
+                        len(df),
+                        len(df) - len(excluded_students),
+                        excluded_students,
+                    ]
                 }
                 GRADES.update(this_class)
             except Exception:
@@ -64,12 +69,12 @@ def _calculate_average(df: pandas.DataFrame) -> (List[str], int):
     int: the average grade from this dataframe of grades.
     """
     # Get the list of students that we'll exclude
-    zero_grades = df[df['grade'] == 0]
-    excluded = zero_grades['student'].to_list()
+    zero_grades = df[df["grade"] == 0]
+    excluded = zero_grades["student"].to_list()
 
     # Calculate average grade using non-zero-grade students
-    non_zero_df = df[df['grade'] > 0]
-    avg_grade = round(non_zero_df['grade'].mean(), 1)
+    non_zero_df = df[df["grade"] > 0]
+    avg_grade = round(non_zero_df["grade"].mean(), 1)
 
     return excluded, avg_grade
 
@@ -80,26 +85,25 @@ def write_results_to_file() -> None:
     The file name is determined by the config value OUTPUT_FILE.
     """
     sorted_grades = sorted([grade for grade in GRADES], reverse=True)
-    with open(config.OUTPUT_FILE, 'w') as outfile:
+    with open(config.OUTPUT_FILE, "w") as outfile:
         # Write the highest class average.
         # Class details is a list, structure is:
         # [class name, total # of students, # of students used, list of excluded students]
         highest_score = sorted_grades[0]
         best_class_details = GRADES[highest_score]
         outfile.write(
-            ("Congratulations, {0}!\n"
-            "You're the highest-performing class, "
-            "with an average score of {1}!\n\n").format(
-                best_class_details[0],
-                highest_score
-            )
+            (
+                "Congratulations, {0}!\n"
+                "You're the highest-performing class, "
+                "with an average score of {1}!\n\n"
+            ).format(best_class_details[0], highest_score)
         )
         outfile.write("Full summary of scores for all classes:\n")
 
         # Calculate average for all classes.
         sum_of_all_grades = sum([grade * GRADES[grade][2] for grade in sorted_grades])
         sum_of_included_students = sum([GRADES[grade][2] for grade in sorted_grades])
-        avg_of_all_students = round((sum_of_all_grades/sum_of_included_students), 1)
+        avg_of_all_students = round((sum_of_all_grades / sum_of_included_students), 1)
 
         outfile.write("Average score of al classes: {0}".format(avg_of_all_students))
 
@@ -116,7 +120,7 @@ def write_results_to_file() -> None:
                     grade,
                     class_details[1],
                     class_details[2],
-                    ", ".join(name for name in class_details[3])
+                    ", ".join(name for name in class_details[3]),
                 )
             )
             outfile.write(output_str)
@@ -126,4 +130,3 @@ if __name__ == "__main__":
     populate_input_files_list()
     read_and_process_all_files()
     write_results_to_file()
-
