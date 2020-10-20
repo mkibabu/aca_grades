@@ -81,7 +81,9 @@ def write_results_to_file() -> None:
     """
     sorted_grades = sorted([grade for grade in GRADES], reverse=True)
     with open(config.OUTPUT_FILE, 'w') as outfile:
-        # Write the highest class average
+        # Write the highest class average.
+        # Class details is a list, structure is:
+        # [class name, total # of students, # of students used, list of excluded students]
         highest_score = sorted_grades[0]
         best_class_details = GRADES[highest_score]
         outfile.write(
@@ -93,19 +95,27 @@ def write_results_to_file() -> None:
             )
         )
         outfile.write("Full summary of scores for all classes:\n")
+
+        # Calculate average for all classes.
+        sum_of_all_grades = sum([grade * GRADES[grade][2] for grade in sorted_grades])
+        sum_of_included_students = sum([GRADES[grade][2] for grade in sorted_grades])
+        avg_of_all_students = round((sum_of_all_grades/sum_of_included_students), 1)
+
+        outfile.write("Average score of al classes: {0}".format(avg_of_all_students))
+
         for grade in sorted_grades:
             class_details = GRADES[grade]
             output_str = (
                 "\nClass: {0:<5}\n"
                 "Mean score: {1}\n"
                 "Total # of students: {2}\n"
-                "Number of excluded students: {3}\n"
+                "Number of included students: {3}\n"
                 "Students with 0 grade:\n"
                 "- {4}\n\n".format(
                     class_details[0],
                     grade,
                     class_details[1],
-                    len(class_details[3]),
+                    class_details[2],
                     ", ".join(name for name in class_details[3])
                 )
             )
@@ -116,3 +126,4 @@ if __name__ == "__main__":
     populate_input_files_list()
     read_and_process_all_files()
     write_results_to_file()
+
